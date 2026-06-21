@@ -1,4 +1,4 @@
-# Qwen3 STS (1.7B-Base) — ComfyUI Workflow
+# Qwen3 STS (1.7B-Base) ComfyUI Workflow
 
 ComfyUI workflow for **Qwen3 Text-to-Speech (TTS)** using the [Qwen3-TTS-12Hz-1.7B-Base](https://huggingface.co/Qwen/Qwen3-TTS-12Hz-1.7B-Base) model from HuggingFace.
 
@@ -33,7 +33,7 @@ This workflow enables high-quality speech synthesis using the Qwen3 TTS model, s
 | 7  | `Qwen3TTSVoiceClonePrompt` | Generates voice clone prompt from reference audio/text   |
 | 8  | `Qwen3TTSPromptManager`  | Manages, edits, and saves prompts (supports `.qwen3tts` files) |
 | 9  | `Qwen3TTSRoleBank`       | Defines speaker roles for multi-turn dialogue            |
-| 10 | `Qwen3TTSAdvancedDialogue` | Core synthesis node — generates audio from texts, instructions, roles, pauses |
+| 10 | `Qwen3TTSAdvancedDialogue` | Core synthesis node that generates audio from texts, instructions, roles, pauses |
 | 11 | `Qwen3TTSScriptProcessor`  | Parses script text into structured lists (texts, instructions, roles, pauses) |
 | 12 | `Qwen3TTSAudioPostProcess` | Post-processes output audio (trim start/end, denoise, resample) |
 
@@ -120,9 +120,9 @@ Ensure the relevant custom node packages are installed in your ComfyUI environme
 
 ## Additional Nodes
 
-- `LoadAudio` — from ComfyUI's core audio loading nodes
-- `PreviewAny` — from a preview/custom nodes extension
-- `SaveAudioMP3` — for MP3 audio export
+- `LoadAudio` (from ComfyUI's core audio loading nodes)
+- `PreviewAny` (from a preview/custom nodes extension)
+- `SaveAudioMP3` (for MP3 audio export)
 
 ## Usage
 
@@ -130,7 +130,7 @@ Ensure the relevant custom node packages are installed in your ComfyUI environme
 2. Connect your reference audio to `LoadAudio`.
 3. Edit the script in `Qwen3TTSScriptProcessor` with your desired text and roles.
 4. Adjust dialogue parameters in `Qwen3TTSAdvancedDialogue` as needed.
-5. Run the workflow — output MP3 will be saved to `audio/ComfyUI`.
+5. Run the workflow to save output MP3 files to `audio/ComfyUI`.
 
 ## File Info
 
@@ -141,13 +141,13 @@ Ensure the relevant custom node packages are installed in your ComfyUI environme
 
 ---
 
-# macOS M-Series Max — Setup & Optimization
+# macOS M-Series Max Setup & Optimization
 
 ## Installation on Apple Silicon (M3/M4 Max, 48GB Unified Memory)
 
 ### PyTorch Setup
 
-Use the default MPS build — no CUDA wheels needed:
+Use the default MPS build. No CUDA wheels needed:
 
 ```bash
 pip install torch torchvision torchaudio
@@ -159,7 +159,7 @@ The default PyPI torch wheel for macOS includes Metal Performance Shaders (MPS) 
 
 | Mode | Recommendation | Reason |
 |------|---------------|--------|
-| **SDPA** | ✅ **Recommended** | Built-in, stable, fully MPS-compatible — matches this workflow's config |
+| **SDPA** | ✅ **Recommended** | Built-in, stable, fully MPS-compatible with this workflow's config |
 | **FlashAttention** | ⚠️ Optional | Faster on some workloads but can be unstable with Qwen3-TTS on Mac |
 
 ### Memory Considerations (48GB Unified)
@@ -177,7 +177,7 @@ This workflow implements a three-stage pipeline for multi-speaker TTS:
 
 1. **ScriptProcessor** parses raw text into structured lists (texts, instructions, roles, pauses)
 2. **RoleBank** maps speaker names to voice references (cloned from 15s audio clips)
-3. **AdvancedDialogue** generates audio sequentially — fetching the correct voice per line and inserting silence between segments
+3. **AdvancedDialogue** generates audio sequentially by fetching the correct voice per line and inserting silence between segments
 
 Using only the "Voice Clone" node without RoleBank loses control over timing and multi-speaker switching.
 
@@ -189,15 +189,15 @@ Using only the "Voice Clone" node without RoleBank loses control over timing and
 
 | Variant | Best For |
 |---------|---------|
-| **1.7B-Base** | Voice cloning — mimics emotion from reference audio (used here) |
+| **1.7B-Base** | Voice cloning that mimics emotion from reference audio (used here) |
 | **1.7B-VoiceDesign** | Creating new voices from text prompts |
 | **1.7B-CustomVoice** | Internal presets (Vivian, Uncle_Fu, etc.) |
 
-The 0.6B model struggles with emotional range — always prefer the 1.7B variant for production quality.
+The 0.6B model struggles with emotional range. Always prefer the 1.7B variant for production quality.
 
 ### ASR-Assisted Voice Cloning
 
-Qwen3's cloning works by subtracting known words from audio to isolate tone. If `ref_text` is empty, the model guesses — resulting in mumbled output.
+Qwen3 cloning works by subtracting known words from audio to isolate tone. If `ref_text` is empty, the model guesses and produces mumbled output.
 
 **Recommended flow:** Route reference audio through `Qwen3TTSSenseVoiceASR` → feed transcribed text into `Qwen3TTSVoiceClonePrompt.ref_text`. This significantly improves speaker similarity.
 
@@ -214,7 +214,7 @@ These values improve on the workflow defaults for more natural-sounding output:
 
 | Parameter | Workflow Default | Recommended | Why |
 |-----------|-----------------|-------------|-----|
-| X-Vector Only | — | `False` | Enables context-aware cloning instead of tone guessing |
+| X-Vector Only | N/A | `False` | Enables context-aware cloning instead of tone guessing |
 | Temperature | `0.7` | `0.8` | Reduces flat, robotic quality |
 | Top_P | `0.8` | `0.9` | Wider intonation range |
 | Scale | `1.1` | `1.1` | Prevents repetition on technical words |
@@ -239,7 +239,7 @@ Use `[pause:x]` tags in the `ScriptProcessor` for precise timing. Without this n
 |-----|------------|
 | **`[laugh]`** | Natural laughter |
 | **`[sigh]`** | Breathy exhale |
-| **`[scream]`** | Experimental — use cautiously |
+| **`[scream]`** | Experimental, use cautiously |
 
 > **Tip:** Remove stray brackets (e.g., `[Credit]`) to avoid unwanted noise artifacts.
 
@@ -251,7 +251,7 @@ Punctuation shapes the model's rhythm and intonation:
 |--------|-------------|-------------|
 | `,` | Short breath / micro-pause | Breaking long sentences |
 | `.` | Full stop, pitch drop | Authoritative statements |
-| `?` | Pitch rise | Questions — avoid overuse |
+| `?` | Pitch rise | Questions, avoid overuse |
 | `!` | Increased volume / pitch | Emphasis, calls to action |
 | `" "` | Tone shift between speakers | Dialogue distinction |
 
